@@ -4,13 +4,10 @@ import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, _}
 import com.wix.e2e.http.client.sync._
-import com.wix.e2e.http.matchers.RequestMatchers
 import com.wix.e2e.http.server.WebServerFactory._
 import com.wix.e2e.http.{HttpRequest, RequestHandler}
-import contract.json.{DefaultObjectMapper, JsonJacksonMarshaller}
+import contract.json.JsonJacksonMarshaller
 import contract.provider.sync.{PostMessageToChannelRequest, PostMessageToChannelResponse}
-import org.specs2.matcher.Matcher
-import org.specs2.mutable.Specification
 
 class FakeSlackServer(port: Int,
                       token: String,
@@ -62,30 +59,3 @@ class FakeSlackServer(port: Int,
     .start()
 }
 
-object PostMessageToChannelRequest {
-  def unapply(request: HttpRequest): Option[HttpRequest] =
-    request match {
-      case req@HttpRequest(HttpMethods.POST, uri@Path("/api/chat.postMessage"), _, _, _) => Some(req)
-      case _ => None
-    }
-}
-
-trait SlackMatchers extends Specification with RequestMatchers {
-  private val mapper = new DefaultObjectMapper
-
-  def haveReceivedPostMessageRequest(withPayload: PostMessageToChannelRequest): Matcher[FakeSlackServer] = {
-    fakeSlack: FakeSlackServer =>
-      fakeSlack.server.recordedRequests must contain(
-        aRequestWith(HttpMethods.POST, "/api/chat.postMessage", mapper.writeValueAsString(withPayload))
-      )
-  }
-
-  private def aRequestWith(method: HttpMethod,
-                           path: String,
-                           withPayload: String): Matcher[HttpRequest] = {
-    request: HttpRequest =>
-      request.method mustEqual method and
-        (request.uri.toString must contain(path)) and
-        (request.entity.extractAsString mustEqual withPayload)
-  }
-}

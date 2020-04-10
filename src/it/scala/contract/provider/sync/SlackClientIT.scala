@@ -1,11 +1,11 @@
 package contract.provider.sync
 
-import contract.provider.testkit.{FakeSlackServer, SlackMatchers}
+import contract.provider.testkit.FakeSlackServer
 import org.specs2.mutable.SpecificationWithJUnit
 
 import scala.util.Random
 
-class SlackClientIT extends SpecificationWithJUnit with SlackMatchers {
+class SlackClientIT extends SpecificationWithJUnit {
 
   private val port = 11111
   private val token = "****"
