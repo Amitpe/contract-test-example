@@ -19,10 +19,10 @@ class HttpSlackClient(baseUrl: String,
       .asString
 
     val responseBody = mapper.unmarshall[PostMessageToChannelResponse](response.body)
-    if (!responseBody.ok)
-      Failure(HttpSlackClientException(responseBody.error))
-    else
+    if (responseBody.ok)
       Success()
+    else
+      Failure(HttpSlackClientException(responseBody.error))
   }
 }
 

@@ -15,6 +15,10 @@ class FakeSlackServer(port: Int,
   type ErrorCode = String
   implicit private val mapper = new JsonJacksonMarshaller
 
+  val server = aStubWebServer
+    .onPort(port)
+    .build
+
   private val handler: RequestHandler = {
     case HttpRequest(_, _, headers, _, _)
       if !headers.contains(RawHeader("authorization", s"Bearer $token")) =>
@@ -63,10 +67,6 @@ class FakeSlackServer(port: Int,
       entity = HttpEntity(s"Request's path is not supported in slack Test-kit.")
     )
 
-  private[testkit] val server = aStubWebServer
-    .onPort(port)
-    .addHandler(handler)
-    .build
-    .start()
+  server.appendAll(handler)
 }
 

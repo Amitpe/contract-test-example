@@ -2,16 +2,17 @@ package contract.provider.sync
 
 import contract.provider.testkit.FakeSlackServer
 import org.specs2.mutable.SpecificationWithJUnit
+import org.specs2.specification.BeforeAll
 
 import scala.util.Random
 
-class SlackClientIT extends SpecificationWithJUnit {
+class SlackClientIT extends SpecificationWithJUnit with BeforeAll {
 
   private val port = 11111
   private val token = "****"
+  private val channels = Seq("C97NS35J9")
 
-  val channels = Seq("C97NS35J9")
-  private val slackTestkit = new FakeSlackServer(port, token, channels)
+  private val fakeSlackServer = new FakeSlackServer(port, token, channels)
   private val slackClient = new HttpSlackClient(s"http://localhost:$port", token)
 
   "Slack Client" should {
@@ -39,5 +40,9 @@ class SlackClientIT extends SpecificationWithJUnit {
     }
   }
 
-  def aNonExistingChannel: String = Random.nextString(9)
+  def aNonExistingChannel: String =
+    Random.nextString(9)
+
+  override def beforeAll(): Unit =
+    fakeSlackServer.server.start()
 }
