@@ -3,9 +3,9 @@ package contract.provider.testkit
 import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, _}
+import com.wix.e2e.http.RequestHandler
 import com.wix.e2e.http.client.sync._
 import com.wix.e2e.http.server.WebServerFactory._
-import com.wix.e2e.http.{HttpRequest, RequestHandler}
 import contract.json.JsonJacksonMarshaller
 import contract.provider.sync.{PostMessageToChannelRequest, PostMessageToChannelResponse}
 
@@ -16,37 +16,48 @@ class FakeSlackServer(port: Int,
   implicit private val mapper = new JsonJacksonMarshaller
 
   private val handler: RequestHandler = {
-    case HttpRequest(_, _, headers, _ ,_) if !headers.contains(RawHeader("authorization", s"Bearer $token")) =>
-      okResponseWith(PostMessageToChannelResponse(ok = false, error = "not_authed"))
-    case httpRequest@HttpRequest(HttpMethods.POST, Path("/api/chat.postMessage"), _, _, _) =>
-      handlePostMessageToChannelRequest(httpRequest)
+    case HttpRequest(_, _, headers, _, _)
+      if !headers.contains(RawHeader("authorization", s"Bearer $token")) =>
+      handleInvalidTokenRequest()
+    case HttpRequest(HttpMethods.POST, Path("/api/chat.postMessage"), _, entity, _) =>
+      handlePostMessageToChannelRequest(entity)
     case _ =>
-      responseNotFound
+      handleUnknownRequest()
   }
 
-  def handlePostMessageToChannelRequest(httpRequest: HttpRequest): HttpResponse =
-    validateRequestBody(httpRequest) match {
-      case Some(errorCode) =>
-        okResponseWith(PostMessageToChannelResponse(ok = false, error = errorCode))
-      case _ =>
-        okResponseWith(PostMessageToChannelResponse(ok = true, error = null))
+  def handleInvalidTokenRequest() =
+    anErrorResponseWith("not_authed")
+
+  def handlePostMessageToChannelRequest(entity: RequestEntity): HttpResponse =
+    validateRequestBody(entity) match {
+      case Some(errorCode) => anErrorResponseWith(errorCode)
+      case _ => aValidResponse()
     }
 
-  private def validateRequestBody(httpRequest: HttpRequest): Option[ErrorCode] = {
-    val requestBody = httpRequest.entity.extractAs[PostMessageToChannelRequest]
+  private def validateRequestBody(entity: RequestEntity): Option[ErrorCode] = {
+    val requestBody = entity.extractAs[PostMessageToChannelRequest]
     if (!channels.contains(requestBody.channel))
       Some("channel_not_found")
     else
       None
   }
 
-  private def okResponseWith(payload: PostMessageToChannelResponse): HttpResponse =
+  private def handleUnknownRequest() =
+    aNotFoundResponse
+
+  private def anErrorResponseWith(error: String) =
     HttpResponse(
       status = StatusCodes.OK,
-      entity = HttpEntity(mapper.marshall(payload))
+      entity = HttpEntity(mapper.marshall(PostMessageToChannelResponse(ok = false, error = error)))
     )
 
-  private def responseNotFound: HttpResponse =
+  private def aValidResponse() =
+    HttpResponse(
+      status = StatusCodes.OK,
+      entity = HttpEntity(mapper.marshall(PostMessageToChannelResponse(ok = true, error = null)))
+    )
+
+  private def aNotFoundResponse: HttpResponse =
     HttpResponse(
       status = StatusCodes.NotFound,
       entity = HttpEntity(s"Request's path is not supported in slack Test-kit.")
