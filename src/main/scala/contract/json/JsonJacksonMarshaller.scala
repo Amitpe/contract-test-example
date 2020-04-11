@@ -3,7 +3,7 @@ package contract.json
 import java.lang.reflect.{ParameterizedType, Type}
 
 import com.fasterxml.jackson.core.`type`.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.joda.JodaModule
@@ -24,6 +24,8 @@ class JsonJacksonMarshaller extends Marshaller {
     .registerModules(new JodaModule, new ParameterNamesModule, new JavaTimeModule) // time modules
     .registerModule(new DefaultScalaModule)
     .disable( WRITE_DATES_AS_TIMESTAMPS )
+
+  objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
   private def typeReference[T: Manifest] = new TypeReference[T] {
     override def getType = typeFromManifest(manifest[T])
