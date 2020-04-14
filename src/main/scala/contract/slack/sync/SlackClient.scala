@@ -1,4 +1,4 @@
-package contract.provider.sync
+package contract.slack.sync
 
 import scala.util.Try
 

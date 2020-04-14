@@ -1,4 +1,4 @@
-package contract.provider.testkit
+package contract.slack.testkit
 
 object SlackApiResponseFactory {
   val postMessageResponse =
