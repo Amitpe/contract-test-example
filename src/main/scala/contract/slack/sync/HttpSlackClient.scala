@@ -29,7 +29,6 @@ class HttpSlackClient(baseUrl: String,
 
 case class PostMessageToChannelResponse(ok: Boolean, error: String)
 
-
 case class PostMessageToChannelRequest(channel: String, text: String)
 
 case class HttpSlackClientException(message: String) extends RuntimeException(message)
