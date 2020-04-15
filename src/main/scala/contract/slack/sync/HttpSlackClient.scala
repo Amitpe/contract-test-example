@@ -3,7 +3,7 @@ package contract.slack.sync
 import contract.json.DefaultObjectMapper
 import scalaj.http.Http
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 class HttpSlackClient(baseUrl: String,
                       token: String) extends SlackClient {
@@ -23,7 +23,7 @@ class HttpSlackClient(baseUrl: String,
     if (responseBody.ok)
       Success()
     else
-      throw new RuntimeException("Kaboom")
+      Failure(HttpSlackClientException(responseBody.error))
   }
 }
 
