@@ -7,5 +7,9 @@ class SlackClientITReal extends SlackClientContract {
 
 object TokenProvider {
   def getTokenOrThrow: String =
-    sys.props.getOrElse("slack.token", throw new RuntimeException("Please provide slack token via -Dslack.token"))
+    sys.props.getOrElse(
+      key = "slack.token",
+      default = throw new RuntimeException(
+        "Please provide slack token: -Dslack.token={token}")
+    )
 }
