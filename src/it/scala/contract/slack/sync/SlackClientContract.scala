@@ -21,7 +21,7 @@ abstract class SlackClientContract extends SpecificationWithJUnit {
     }
 
     "return failure when providing a wrong token" in {
-      val slackClient = new HttpSlackClient(baseUrl, token = aRandomString)
+      val slackClient = aBadTokenSlackClient
 
       slackClient.postMessageToChannel(
         channelId = existingChannels.head,
@@ -35,6 +35,9 @@ abstract class SlackClientContract extends SpecificationWithJUnit {
     }
 
   }
+
+  private def aBadTokenSlackClient =
+    new HttpSlackClient(baseUrl, token = aRandomString)
 
   protected def aRandomString =
     Random.alphanumeric.dropWhile(_.isDigit).take(10).mkString
