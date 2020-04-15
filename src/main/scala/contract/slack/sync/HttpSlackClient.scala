@@ -1,6 +1,6 @@
 package contract.slack.sync
 
-import contract.json.JsonJacksonMarshaller
+import contract.json.DefaultObjectMapper
 import scalaj.http.Http
 
 import scala.util.{Success, Try}
@@ -8,7 +8,7 @@ import scala.util.{Success, Try}
 class HttpSlackClient(baseUrl: String,
                       token: String) extends SlackClient {
 
-  private val mapper = new JsonJacksonMarshaller
+  private val mapper = new DefaultObjectMapper
 
   override def postMessageToChannel(channelId: String,
                                     text: String): Try[Unit] = {
@@ -18,7 +18,7 @@ class HttpSlackClient(baseUrl: String,
       .postData(s"""{ "channel": "$channelId", "text": "$text" }""")
       .asString
 
-    val responseBody = mapper.unmarshall[PostMessageToChannelResponse](response.body)
+    val responseBody = mapper.readValue(response.body, classOf[PostMessageToChannelResponse])
 
     if (responseBody.ok)
       Success()

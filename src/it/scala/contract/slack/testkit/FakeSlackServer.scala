@@ -5,11 +5,8 @@ import akka.http.scaladsl.model.{HttpEntity, HttpRequest, _}
 import com.wix.e2e.http.RequestHandler
 import com.wix.e2e.http.client.sync._
 import com.wix.e2e.http.server.WebServerFactory._
-import contract.json.JsonJacksonMarshaller
 
 class FakeSlackServer(port: Int) {
-  implicit private val mapper = new JsonJacksonMarshaller
-
   val server = aStubWebServer
     .onPort(port)
     .build
