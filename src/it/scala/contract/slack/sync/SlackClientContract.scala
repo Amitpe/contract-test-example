@@ -40,5 +40,5 @@ abstract class SlackClientContract extends SpecificationWithJUnit {
     new HttpSlackClient(baseUrl, token = aRandomString)
 
   protected def aRandomString =
-    Random.alphanumeric.dropWhile(_.isDigit).take(10).mkString
+    Random.alphanumeric.take(10).mkString
 }

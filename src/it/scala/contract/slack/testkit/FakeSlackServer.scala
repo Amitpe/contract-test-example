@@ -1,13 +1,15 @@
 package contract.slack.testkit
 
 import akka.http.scaladsl.model.Uri.Path
-import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, _}
 import com.wix.e2e.http.RequestHandler
 import com.wix.e2e.http.client.sync._
 import com.wix.e2e.http.server.WebServerFactory._
 import contract.json.JsonJacksonMarshaller
 import contract.slack.sync.{PostMessageToChannelRequest, PostMessageToChannelResponse}
+
+import scala.collection.immutable
 
 class FakeSlackServer(port: Int,
                       token: String,
@@ -20,14 +22,19 @@ class FakeSlackServer(port: Int,
     .build
 
   private val handler: RequestHandler = {
-    case HttpRequest(_, _, headers, _, _)
-      if !headers.contains(RawHeader("authorization", s"Bearer $token")) =>
+    case HttpRequest(_, _, headers, _, _) if invalidToken(headers) =>
       handleInvalidTokenRequest()
     case HttpRequest(HttpMethods.POST, Path("/api/chat.postMessage"), _, entity, _) =>
       handlePostMessageToChannelRequest(entity)
     case _ =>
       handleUnknownRequest()
   }
+
+  private def invalidToken(headers: immutable.Seq[HttpHeader]) =
+    !isAuthenticated(headers)
+
+  private def isAuthenticated(headers: immutable.Seq[HttpHeader]) =
+    headers.contains(Authorization(OAuth2BearerToken(token)))
 
   def handleInvalidTokenRequest() =
     anErrorResponseWith("not_authed")
